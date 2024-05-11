@@ -1,6 +1,11 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
 from pyogrio import read_dataframe
+
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from lib.parcels_lib import *
 from lib.parcel_udfs import *
 

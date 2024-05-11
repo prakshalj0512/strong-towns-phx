@@ -11,13 +11,24 @@ BASE_DIR = 'data/'
 
 
 def read_func(file_name, format='csv'):
-    return spark.read.format(format).option('header', True).load(f'{BASE_DIR}{file_name}')
+    if format == 'csv':
+        return spark.read.format(format).option('header', True).load(f'{BASE_DIR}{file_name}')
+    else:
+        return spark.read.format(format).load(f'{BASE_DIR}{file_name}')
 
 def write_func(df, file_name, format='csv'):
-    (
-        df
-        .coalesce(1).write.format(format).mode('overwrite').option('header',True)
-        .save(f'{BASE_DIR}{file_name}')
-    )
+    if format == 'parquet':
+        (
+            df
+            .write.format(format).mode('overwrite')
+            .save(f'{BASE_DIR}{file_name}')
+        )
+    else:
+        (
+            df
+            .coalesce(1).write.format(format).mode('overwrite').option('header', True)
+            .save(f'{BASE_DIR}{file_name}')
+        )
+
 
 
