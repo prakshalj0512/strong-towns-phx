@@ -20,7 +20,7 @@ raw_100 = (
     )
 )
 
-backfilled_tax_data_2023 = read_func('bronze/backfilled_tax_data_2023')
+treasurer_verified_tax_data_2023 = read_func('bronze/treasurer_verified_tax_data_2023')
 Parcels_All_PUCs = read_func('bronze/Parcels_All_PUCs')
 
 # zip code & city validation
@@ -30,7 +30,7 @@ zips = read_func('source/uszips.csv').select(col('zip'), col('city').alias('zip_
 # logic to update PUCs for vacant lots
 ################
 valid_df = (
-    backfilled_tax_data_2023.alias('a')
+    treasurer_verified_tax_data_2023.alias('a')
     .join(raw_100.alias('raw_100'), on='parcel_no')
     .join(Parcels_All_PUCs, on='parcel_no', how='left')
     .join(

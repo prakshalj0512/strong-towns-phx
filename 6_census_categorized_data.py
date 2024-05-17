@@ -40,5 +40,3 @@ join_df = (
 print(join_df.count())
 
 write_func(join_df, f'gold/census_categorized_tax_data_2023')
-
-

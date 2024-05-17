@@ -5,21 +5,8 @@ import requests
 import re
 from datetime import datetime
 from lib.parcels_lib import *
+from lib.parcel_udfs import *
 
-# Function to make HTTP GET request
-def make_request(parcel_no):
-    url = f'https://treasurer.maricopa.gov/parcel/default.aspx?Parcel={parcel_no}'
-    print(url)
-    try:
-        response = requests.get(url)
-        x=response.text
-        match = re.search(r'\$\d+(,\d+)*\.\d+', x)
-        dollar_amount = match.group(0)
-        cleaned_string = re.sub(r'[^0-9.]', '', dollar_amount)
-        return cleaned_string
-    except Exception as e:
-        return str(e)
-        
 
 # Initialize SparkSession
 spark = SparkSession.builder \
