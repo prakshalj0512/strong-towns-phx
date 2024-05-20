@@ -8,7 +8,7 @@ from pyspark.sql.types import *
 from lib.parcels_lib import *
 from lib.parcel_udfs import *
 
-# backfilled_tax_data_2023 = read_func('gold/backfilled_tax_data_2023')
+
 backfilled_tax_data_2023 = read_func('bronze/backfilled_tax_data_2023')
 
 treasurer_2m = read_func('bronze/treasurer_two_M_parq', 'parquet')

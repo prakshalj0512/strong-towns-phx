@@ -1,3 +1,8 @@
+################################
+# Convert csv file provided by the assessor office (2022) to usable parquet files
+# adds parcel_no & acres_clean col
+################################
+
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
 from lib.parcels_lib import *

@@ -1,9 +1,5 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
-import pandas as pd
-import requests
-import re
-from datetime import datetime
 from lib.parcels_lib import *
 from lib.parcel_udfs import *
 
@@ -19,30 +15,30 @@ spark = SparkSession.builder \
 consolidated_tax_data_2023 = read_func('../../Secured_Master/consolidated_tax_data_2023')
 
 ################
-# parcels to recalculate
+# parcels to rescrape
 ################
 valid_taxes_df = consolidated_tax_data_2023.filter(col('tax_2023').rlike(r'^[0-9]+(\.[0-9]+)?$'))
 
-need_to_recalculate = consolidated_tax_data_2023.join(valid_taxes_df, on='parcel_no', how='leftanti')
+need_to_rescrape = consolidated_tax_data_2023.join(valid_taxes_df, on='parcel_no', how='leftanti')
 
-print(f'NEED TO RECALCULATE: {need_to_recalculate.count()}')
-need_to_recalculate=need_to_recalculate.repartition(24)
+print(f'NEED TO rescrape: {need_to_rescrape.count()}')
+need_to_rescrape=need_to_rescrape.repartition(24)
 
 ################
-# recalculate logic
+# rescrape logic
 ################
-recalculated_taxes = (
-    need_to_recalculate
+rescraped_taxes = (
+    need_to_rescrape
     .rdd.map(lambda row: (row['parcel_no'], make_request(row['parcel_no']))).toDF(['parcel_no', 'response_code'])
 )
 
 ################
-# merge old valid dataset with new recalculated
+# merge old valid dataset with new rescraped
 ################
 
-ans = consolidated_tax_data_2023.join(recalculated_taxes,on='parcel_no')
+ans = consolidated_tax_data_2023.join(rescraped_taxes,on='parcel_no')
 
-recalculated_df = (
+rescraped_df = (
     ans
     .select(
         'parcel_no',
@@ -56,6 +52,6 @@ recalculated_df = (
     .withColumn('tax/acre', col('tax_2023')/col('acres_clean'))
 )
 
-backfilled_tax_data_df = valid_taxes_df.union(recalculated_df)
+backfilled_tax_data_df = valid_taxes_df.union(rescraped_df)
 
 write_func(backfilled_tax_data_df, 'bronze/backfilled_tax_data_2023')

@@ -27,7 +27,7 @@ Parcels_All_PUCs = read_func('bronze/Parcels_All_PUCs')
 zips = read_func('source/uszips.csv').select(col('zip'), col('city').alias('zip_city'), 'state_id')
 
 ################
-# logic to update PUCs for vacant lots
+# logic to update PUCs for ALL lots & validate zip & city accuracy
 ################
 valid_df = (
     treasurer_verified_tax_data_2023.alias('a')

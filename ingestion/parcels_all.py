@@ -1,3 +1,8 @@
+################################
+# Convert shp file from assessor into parquet with APN & PUC col for getting latest PUCs
+# https://data-maricopa.opendata.arcgis.com/datasets/c937f17330f64e64abd41976fc8bb17f/about
+################################
+
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
 from pyogrio import read_dataframe

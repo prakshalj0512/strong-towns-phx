@@ -20,7 +20,7 @@ dup_apns = (
     census_df
     .groupBy('apn')
     .count()
-    .filter(col('count')>1)
+    .filter(col('count') > 1)
     .select('APN').distinct()
 )
 
@@ -36,7 +36,5 @@ join_df = (
     .join(clean_census_df, on='parcel_no', how='left')
     .join(raw_100, on='parcel_no', how='left')
 )
-
-print(join_df.count())
 
 write_func(join_df, f'gold/census_categorized_tax_data_2023')
