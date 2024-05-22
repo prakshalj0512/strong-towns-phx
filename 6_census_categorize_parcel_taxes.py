@@ -14,12 +14,15 @@ from lib.parcel_udfs import *
 ################
 raw_100 = (
     read_func('bronze/raw_100')
+    .withColumn('legal_class', concat(col('LAND_1ST'), lit('.'), col('LAND_RATIO_1ST')))
     .select(
         col('parcel_no'),
-        col('SITUS_CITY').alias('City')
+        col('SITUS_CITY').alias('City'),
+        col('legal_class')
     )
 )
 
+census_df = read_func('source/qgis_census_tracts.csv')
 treasurer_verified_tax_data_2023 = read_func('bronze/treasurer_verified_tax_data_2023')
 Parcels_All_PUCs = read_func('bronze/Parcels_All_PUCs')
 
@@ -55,7 +58,7 @@ valid_df = (
 
 # Register the UDF; # Apply the UDF to create the new column
 map_property_use_udf = udf(map_property_use_code, StringType())
-valid_df = valid_df.withColumn('property_use_code_title', map_property_use_udf(col('property_use_code')))
+valid_df = valid_df.withColumn('minor_category', map_property_use_udf(col('property_use_code')))
 
 # Register the UDF; # Apply the mapping function to create the major_category column
 map_category_udf = udf(map_category, StringType())
@@ -72,4 +75,26 @@ productive_parcels_df = (
     )
 )
 
-write_func(productive_parcels_df, f'gold/categorized_tax_data_2023')
+# remove instances where 1 APN maps to multiple census tracts
+dup_apns = (
+    census_df
+    .groupBy('apn')
+    .count()
+    .filter(col('count') > 1)
+    .select('APN').distinct()
+)
+
+clean_census_df = (
+    census_df
+    .join(dup_apns, on='apn', how='leftanti')
+    .withColumnRenamed('apn', 'parcel_no')
+    .select('parcel_no', 'TRACTCE').distinct()
+)
+
+join_df = (
+    productive_parcels_df
+    .join(clean_census_df, on='parcel_no', how='left')
+)
+
+
+write_func(join_df, f'gold/census_categorized_tax_data_2023')

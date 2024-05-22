@@ -11,7 +11,9 @@ property_use_mapping = {
     (100, 199): 'SFR',
     (200, 299): 'Rec Centers',
     (300, 349): '2-4Plex',
-    (350, 399): 'Apartments',
+    (350, 359): 'Small Apartments (<25)',
+    (360, 379): 'Large Apartments (25+)',
+    (380, 399): 'Condos',  # apt co-ops
     (400, 499): 'Hotels',
     (500, 599): 'Motels',
     (600, 699): 'Resorts',
