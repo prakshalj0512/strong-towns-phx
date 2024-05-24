@@ -17,10 +17,12 @@ from lib.parcel_udfs import *
 
 shapefile_path='/Users/prakshaljain/Desktop/strong_towns/data/strong-towns-phx/data/source/Parcels/Parcels_All.shp'
 assessor_parcels_shp = read_dataframe(shapefile_path)
-selected_columns = ['APN', 'PUC']
+
+col_list = ['APN', 'PUC', 'City', 'ZipCode']
+
 Parcels_All_PUCs = (
     spark
-    .createDataFrame(assessor_parcels_shp[selected_columns])
+    .createDataFrame(assessor_parcels_shp[col_list])
     .withColumnRenamed('APN', 'parcel_no')
 )
 

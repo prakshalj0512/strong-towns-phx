@@ -6,9 +6,6 @@ from pyogrio import read_dataframe
 from lib.parcels_lib import *
 from lib.parcel_udfs import *
 
-# Initialize SparkSession
-# spark = SparkSession.builder.appName("categorize_parcel_taxes").getOrCreate()
-
 ################
 # table read
 ################
@@ -17,14 +14,18 @@ raw_100 = (
     .withColumn('legal_class', concat(col('LAND_1ST'), lit('.'), col('LAND_RATIO_1ST')))
     .select(
         col('parcel_no'),
-        col('SITUS_CITY').alias('City'),
+        col('SITUS_CITY').alias('raw_100_city'),
         col('legal_class')
     )
 )
 
 census_df = read_func('source/qgis_census_tracts.csv')
 treasurer_verified_tax_data_2023 = read_func('bronze/treasurer_verified_tax_data_2023')
-Parcels_All_PUCs = read_func('bronze/Parcels_All_PUCs')
+Parcels_All_PUCs = (
+    read_func('bronze/Parcels_All_PUCs')
+    .withColumnRenamed('City', 'parcels_all_city')
+    .withColumnRenamed('ZipCode', 'parcels_all_zip_code')
+)
 
 # zip code & city validation
 zips = read_func('source/uszips.csv').select(col('zip'), col('city').alias('zip_city'), 'state_id')
@@ -38,22 +39,20 @@ valid_df = (
     .join(Parcels_All_PUCs, on='parcel_no', how='left')
     .join(
         zips.alias('b'),
-        how='left',
-        on=((trim(col('a.situs_zip'))==trim(col('b.zip'))) & (lower(col('raw_100.City'))==lower(col('b.zip_city'))))
+        how='inner',  # drops all the bad zip code entries
+        on=((trim(col('a.situs_zip'))==trim(col('b.zip'))))
     )
     .withColumn(
         'property_use_code',
         when(col('PUC').isNotNull() & (col('PUC') != col('property_use_code')),
             col('PUC')).otherwise(col('property_use_code'))
     )
-    .withColumn
-    (
-        'is_valid_zip_city',
-        when(col('state_id').isNull(), lit('N'))
-        .otherwise(lit('Y'))
+    # retrieve the latest city name from the assessor's parcels shapefile
+    .withColumn('city', 
+                when(col('parcels_all_city').isNotNull(), col('parcels_all_city'))
+                .otherwise(col('raw_100_city'))
     )
-    .filter(col('is_valid_zip_city')=='Y')
-    .drop('is_valid_zip_city', 'zip', 'zip_city', 'state_id', 'PUC')
+    .drop('is_valid_zip_city', 'zip', 'zip_city', 'state_id', 'PUC', 'parcels_all_city', 'parcels_all_zip_code', 'raw_100_city')
 )
 
 # Register the UDF; # Apply the UDF to create the new column
@@ -82,7 +81,7 @@ dup_apns = (
     .count()
     .filter(col('count') > 1)
     .select('APN').distinct()
-)
+)  # 5195
 
 clean_census_df = (
     census_df
@@ -95,6 +94,5 @@ join_df = (
     productive_parcels_df
     .join(clean_census_df, on='parcel_no', how='left')
 )
-
 
 write_func(join_df, f'gold/census_categorized_tax_data_2023')

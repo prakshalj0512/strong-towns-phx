@@ -94,13 +94,14 @@ code_ranges = {
     (2600, 2699): 'Parking',
     (3000, 3799): 'Industrial',
     (4000, 4999): 'Agricultural',
-    (5000, 8499): 'Other',
+    (5000, 6999): 'Government',
+    (7000, 8499): 'Other',
     (8500, 8599): 'Multi-Family',
     (8600, 8799): 'SFR',
     (8800, 8899): 'Other',
     (8900, 8999): 'TBD',
-    (9000, 9399): 'Other',
-    (9400, 9999): 'Government',
+    (9000, 9299): 'Other',
+    (9300, 9999): 'Government',
 }
 
 # Create a function to map property use codes to categories
